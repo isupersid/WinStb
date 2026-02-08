@@ -24,11 +24,42 @@ namespace WinStb.Models
             TimeZone = "UTC";
             StbType = "MAG254";
 
+            var random = new Random();
+
             // Generate default MAC address in the correct format
             if (string.IsNullOrEmpty(MacAddress))
             {
-                var random = new Random();
                 MacAddress = $"00:1A:79:{random.Next(0, 256):X2}:{random.Next(0, 256):X2}:{random.Next(0, 256):X2}";
+            }
+
+            // Generate default Serial Number (format: 12 uppercase alphanumeric characters)
+            if (string.IsNullOrEmpty(SerialNumber))
+            {
+                const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                var serialChars = new char[12];
+                for (int i = 0; i < 12; i++)
+                {
+                    serialChars[i] = chars[random.Next(chars.Length)];
+                }
+                SerialNumber = new string(serialChars);
+            }
+
+            // Generate default Device ID (format: 32 lowercase hex characters)
+            if (string.IsNullOrEmpty(DeviceId))
+            {
+                DeviceId = Guid.NewGuid().ToString("N"); // 32 hex chars without dashes
+            }
+
+            // Generate default Device ID2 (format: 32 lowercase hex characters)
+            if (string.IsNullOrEmpty(DeviceId2))
+            {
+                DeviceId2 = Guid.NewGuid().ToString("N"); // 32 hex chars without dashes
+            }
+
+            // Generate default Signature (format: 32 lowercase hex characters)
+            if (string.IsNullOrEmpty(Signature))
+            {
+                Signature = Guid.NewGuid().ToString("N"); // 32 hex chars without dashes
             }
         }
     }

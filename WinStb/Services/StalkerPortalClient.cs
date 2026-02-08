@@ -51,9 +51,10 @@ namespace WinStb.Services
                 var error = jsonResponse["js"]?["error"]?.ToString();
                 if (!string.IsNullOrEmpty(error))
                 {
-                    var msg = jsonResponse["js"]?["msg"]?.ToString() ?? error;
-                    LastError = $"Portal error: {msg}";
-                    System.Diagnostics.Debug.WriteLine($"Portal returned error: {msg}");
+                    // Replace the inner 'msg' variable name with a different name to avoid CS0136
+                    var errorMsg = jsonResponse["js"]?["msg"]?.ToString() ?? error;
+                    LastError = $"Portal error: {errorMsg}";
+                    System.Diagnostics.Debug.WriteLine($"Portal returned error: {errorMsg}");
                     return false;
                 }
 
@@ -69,14 +70,66 @@ namespace WinStb.Services
                 System.Diagnostics.Debug.WriteLine($"Token received: {_authToken}");
 
                 // Step 2: Get profile to verify connection
-                var profileUrl = BuildUrl("get_profile", "stb");
+                // Include device parameters if provided
+                var profileParams = new Dictionary<string, string>();
+
+                if (!string.IsNullOrEmpty(_currentProfile.SerialNumber))
+                {
+                    profileParams["sn"] = _currentProfile.SerialNumber;
+                    System.Diagnostics.Debug.WriteLine($"Sending Serial Number: {_currentProfile.SerialNumber}");
+                }
+
+                if (!string.IsNullOrEmpty(_currentProfile.DeviceId))
+                {
+                    profileParams["device_id"] = _currentProfile.DeviceId;
+                    System.Diagnostics.Debug.WriteLine($"Sending Device ID: {_currentProfile.DeviceId}");
+                }
+
+                if (!string.IsNullOrEmpty(_currentProfile.DeviceId2))
+                {
+                    profileParams["device_id2"] = _currentProfile.DeviceId2;
+                    System.Diagnostics.Debug.WriteLine($"Sending Device ID2: {_currentProfile.DeviceId2}");
+                }
+
+                if (!string.IsNullOrEmpty(_currentProfile.Signature))
+                {
+                    profileParams["signature"] = _currentProfile.Signature;
+                    System.Diagnostics.Debug.WriteLine($"Sending Signature: {_currentProfile.Signature}");
+                }
+
+                var profileUrl = BuildUrl("get_profile", "stb", profileParams.Count > 0 ? profileParams : null);
                 _httpClient.DefaultRequestHeaders.Remove("Authorization");
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_authToken}");
 
                 var profileResponse = await _httpClient.GetStringAsync(profileUrl);
-                System.Diagnostics.Debug.WriteLine($"Profile response: {profileResponse}");
+                System.Diagnostics.Debug.WriteLine($"Profile response received (length: {profileResponse.Length})");
 
-                return !string.IsNullOrEmpty(profileResponse);
+                // Check if profile response indicates an error
+                // Note: Don't confuse user's "status" field with API error status
+                var profileJson = JObject.Parse(profileResponse);
+
+                // Check for explicit error message (device conflict, etc.)
+                var msg = profileJson["js"]?["msg"]?.ToString();
+                if (!string.IsNullOrEmpty(msg) &&
+                    (msg.Contains("conflict", StringComparison.OrdinalIgnoreCase) ||
+                     msg.Contains("mismatch", StringComparison.OrdinalIgnoreCase)))
+                {
+                    LastError = $"Device registration issue: {msg}";
+                    System.Diagnostics.Debug.WriteLine($"Profile error: {msg}");
+                    return false;
+                }
+
+                // Check if we got valid profile data (has an id field)
+                var profileId = profileJson["js"]?["id"]?.ToString();
+                if (string.IsNullOrEmpty(profileId))
+                {
+                    LastError = "Invalid profile response - no user ID returned";
+                    System.Diagnostics.Debug.WriteLine("Profile error: No ID in response");
+                    return false;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Profile loaded successfully - User ID: {profileId}");
+                return true;
             }
             catch (HttpRequestException ex)
             {
@@ -267,7 +320,7 @@ namespace WinStb.Services
                     if (streamCmd.StartsWith("ffmpeg ", StringComparison.OrdinalIgnoreCase))
                     {
                         streamCmd = streamCmd.Substring(7).Trim();
-                    }
+                      }
 
                     // Some portals return the URL with quotes
                     streamCmd = streamCmd.Trim('"', '\'');
