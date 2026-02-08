@@ -1,0 +1,65 @@
+<Page
+    x:Class="WinStb.Views.PlayerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="Black">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Background="#1F1F1F" Padding="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="← Back" Click="Back_Click" Style="{StaticResource TextBlockButtonStyle}"/>
+            <TextBlock Grid.Column="1" Text="{x:Bind LocalViewModel.Title, Mode=OneWay}"
+                       FontSize="18" FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Margin="20,0,0,0"
+                       Foreground="White"/>
+        </Grid>
+
+        <!-- Media Player -->
+        <MediaPlayerElement x:Name="MediaPlayer"
+                           Grid.Row="1"
+                           AreTransportControlsEnabled="True"
+                           AutoPlay="True"
+                           Stretch="Uniform">
+            <MediaPlayerElement.TransportControls>
+                <MediaTransportControls IsCompact="False"/>
+            </MediaPlayerElement.TransportControls>
+        </MediaPlayerElement>
+
+        <!-- Loading Indicator -->
+        <StackPanel Grid.Row="1"
+                    x:Name="LoadingPanel"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+            <ProgressRing IsActive="True" Width="50" Height="50" Foreground="White"/>
+            <TextBlock Text="Loading stream..." Foreground="White" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- Info Bar -->
+        <Grid Grid.Row="2" Background="#1F1F1F" Padding="20">
+            <StackPanel Orientation="Horizontal" Spacing="20">
+                <TextBlock Text="{x:Bind LocalViewModel.StreamUrl, Mode=OneWay}"
+                           Foreground="White"
+                           Opacity="0.7"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

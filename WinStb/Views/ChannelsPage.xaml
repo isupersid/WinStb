@@ -1,0 +1,105 @@
+<Page
+    x:Class="WinStb.Views.ChannelsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:WinStb.Models"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Categories/Genres Sidebar -->
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="0,0,20,0">
+            <TextBlock Text="Categories" FontWeight="Bold" FontSize="18" Margin="0,0,0,10"/>
+            <ListView ItemsSource="{x:Bind LocalViewModel.Genres, Mode=OneWay}"
+                      SelectedItem="{x:Bind LocalViewModel.SelectedGenre, Mode=TwoWay}"
+                      SelectionChanged="Genre_SelectionChanged">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:Genre">
+                        <TextBlock Text="{x:Bind Title}" Padding="10,5"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+
+        <!-- Content Area -->
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,20">
+            <Button Content="Refresh" Click="Refresh_Click"/>
+        </StackPanel>
+
+        <!-- Live TV Channels -->
+        <GridView Grid.Row="1" Grid.Column="1"
+                  x:Name="LiveTVGrid"
+                  ItemsSource="{x:Bind LocalViewModel.Channels, Mode=OneWay}"
+                  ItemClick="Channel_Click"
+                  IsItemClickEnabled="True">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="local:Channel">
+                    <Grid Width="200" Height="120" Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Background="{ThemeResource SystemControlBackgroundAccentBrush}" CornerRadius="5">
+                            <Image Source="{x:Bind Logo}" Stretch="UniformToFill" />
+                        </Border>
+
+                        <StackPanel Grid.Row="1" Margin="5,5,0,0">
+                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{x:Bind Number}" Opacity="0.7" FontSize="12"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+
+        <!-- VOD Items -->
+        <GridView Grid.Row="1" Grid.Column="1"
+                  x:Name="VODGrid"
+                  ItemsSource="{x:Bind LocalViewModel.VodItems, Mode=OneWay}"
+                  ItemClick="VodItem_Click"
+                  IsItemClickEnabled="True">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="local:VodItem">
+                    <Grid Width="200" Height="300" Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Background="{ThemeResource SystemControlBackgroundAccentBrush}" CornerRadius="5">
+                            <Image Source="{x:Bind Screenshot}" Stretch="UniformToFill" />
+                        </Border>
+
+                        <StackPanel Grid.Row="1" Margin="5,5,0,0">
+                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{x:Bind Year}" Opacity="0.7" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="★" FontSize="12" Foreground="Gold"/>
+                                <TextBlock Text="{x:Bind Rating}" FontSize="12" Opacity="0.7"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+
+        <ProgressRing Grid.Row="1" Grid.Column="1"
+                      IsActive="{x:Bind LocalViewModel.IsLoading, Mode=OneWay}"
+                      Width="50" Height="50"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+    </Grid>
+</Page>
