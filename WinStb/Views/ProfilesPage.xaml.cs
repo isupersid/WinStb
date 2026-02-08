@@ -185,6 +185,9 @@ namespace WinStb.Views
 
             try
             {
+                // Logout first to clear any stale session
+                await MainViewModel.PortalClient.LogoutAsync();
+
                 var success = await MainViewModel.PortalClient.AuthenticateAsync(profile);
 
                 if (success)

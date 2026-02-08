@@ -45,7 +45,7 @@ namespace WinStb.Views
             await LoadDataAsync();
         }
 
-        private async System.Threading.Tasks.Task LoadDataAsync()
+        private async System.Threading.Tasks.Task LoadDataAsync(bool forceRefresh = false)
         {
             LocalViewModel.IsLoading = true;
 
@@ -72,7 +72,7 @@ namespace WinStb.Views
                     }
 
                     // Load all channels
-                    await LoadChannelsAsync();
+                    await LoadChannelsAsync(forceRefresh);
                 }
                 else if (LocalViewModel.SelectedContentType == "VOD")
                 {
@@ -114,30 +114,50 @@ namespace WinStb.Views
             }
         }
 
-        private async System.Threading.Tasks.Task LoadChannelsAsync()
+        private bool _isLoadingChannels = false;
+
+        private async System.Threading.Tasks.Task LoadChannelsAsync(bool forceRefresh = false)
         {
+            // Prevent concurrent calls
+            if (_isLoadingChannels)
+            {
+                System.Diagnostics.Debug.WriteLine("LoadChannelsAsync already in progress, skipping duplicate call");
+                return;
+            }
+
+            _isLoadingChannels = true;
             LocalViewModel.IsLoading = true;
 
             try
             {
                 var genreId = LocalViewModel.SelectedGenre?.Id;
-                var channels = await MainViewModel.PortalClient.GetAllChannelsAsync();
+                var channels = await MainViewModel.PortalClient.GetAllChannelsAsync(forceRefresh);
 
-                LocalViewModel.Channels.Clear();
+                System.Diagnostics.Debug.WriteLine($"Loaded {channels.Count} channels total");
 
                 // Filter by genre if not "All"
                 if (!string.IsNullOrEmpty(genreId) && genreId != "*")
                 {
                     channels = channels.Where(c => c.GenreTitle == LocalViewModel.SelectedGenre.Title).ToList();
+                    System.Diagnostics.Debug.WriteLine($"Filtered to {channels.Count} channels for genre {LocalViewModel.SelectedGenre.Title}");
                 }
 
-                foreach (var channel in channels)
+                // Update UI collection on the UI thread
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    LocalViewModel.Channels.Add(channel);
-                }
+                    LocalViewModel.Channels.Clear();
+
+                    foreach (var channel in channels)
+                    {
+                        LocalViewModel.Channels.Add(channel);
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"Added {LocalViewModel.Channels.Count} channels to UI");
+                });
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"LoadChannelsAsync error: {ex.GetType().Name} - {ex.Message}");
                 var dialog = new ContentDialog
                 {
                     Title = "Error",
@@ -149,11 +169,22 @@ namespace WinStb.Views
             finally
             {
                 LocalViewModel.IsLoading = false;
+                _isLoadingChannels = false;
             }
         }
 
+        private bool _isLoadingVodItems = false;
+
         private async System.Threading.Tasks.Task LoadVodItemsAsync()
         {
+            // Prevent concurrent calls
+            if (_isLoadingVodItems)
+            {
+                System.Diagnostics.Debug.WriteLine("LoadVodItemsAsync already in progress, skipping duplicate call");
+                return;
+            }
+
+            _isLoadingVodItems = true;
             LocalViewModel.IsLoading = true;
 
             try
@@ -162,10 +193,10 @@ namespace WinStb.Views
 
                 // Load all pages
                 var allItems = new System.Collections.Generic.List<VodItem>();
-                var page = 1;
+                var page = 0;
                 var hasMorePages = true;
 
-                while (hasMorePages && page <= 10) // Limit to 10 pages for now
+                while (hasMorePages && page < 10) // Limit to 10 pages for now
                 {
                     var items = await MainViewModel.PortalClient.GetVodItemsAsync(categoryId, page);
 
@@ -185,14 +216,21 @@ namespace WinStb.Views
                     }
                 }
 
-                LocalViewModel.VodItems.Clear();
-                foreach (var item in allItems)
+                // Update UI collection on the UI thread
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    LocalViewModel.VodItems.Add(item);
-                }
+                    LocalViewModel.VodItems.Clear();
+                    foreach (var item in allItems)
+                    {
+                        LocalViewModel.VodItems.Add(item);
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"Loaded {LocalViewModel.VodItems.Count} VOD items");
+                });
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"LoadVodItemsAsync error: {ex.GetType().Name} - {ex.Message}");
                 var dialog = new ContentDialog
                 {
                     Title = "Error",
@@ -204,6 +242,7 @@ namespace WinStb.Views
             finally
             {
                 LocalViewModel.IsLoading = false;
+                _isLoadingVodItems = false;
             }
         }
 
@@ -298,7 +337,8 @@ namespace WinStb.Views
 
         private async void Refresh_Click(object sender, RoutedEventArgs e)
         {
-            await LoadDataAsync();
+            System.Diagnostics.Debug.WriteLine("Refresh button clicked - forcing cache refresh");
+            await LoadDataAsync(forceRefresh: true);
         }
     }
 }

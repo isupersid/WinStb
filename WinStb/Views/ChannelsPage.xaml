@@ -38,63 +38,49 @@
             <Button Content="Refresh" Click="Refresh_Click"/>
         </StackPanel>
 
-        <!-- Live TV Channels -->
-        <GridView Grid.Row="1" Grid.Column="1"
+        <!-- Live TV Channels - Simple List -->
+        <ListView Grid.Row="1" Grid.Column="1"
                   x:Name="LiveTVGrid"
                   ItemsSource="{x:Bind LocalViewModel.Channels, Mode=OneWay}"
                   ItemClick="Channel_Click"
-                  IsItemClickEnabled="True">
-            <GridView.ItemTemplate>
+                  IsItemClickEnabled="True"
+                  SelectionMode="None">
+            <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Channel">
-                    <Grid Width="200" Height="120" Margin="5">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <Border Grid.Row="0" Background="{ThemeResource SystemControlBackgroundAccentBrush}" CornerRadius="5">
-                            <Image Source="{x:Bind Logo}" Stretch="UniformToFill" />
-                        </Border>
-
-                        <StackPanel Grid.Row="1" Margin="5,5,0,0">
-                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Text="{x:Bind Number}" Opacity="0.7" FontSize="12"/>
-                        </StackPanel>
-                    </Grid>
+                    <StackPanel Orientation="Horizontal" Padding="10,8">
+                        <TextBlock Text="{x:Bind Number}"
+                                   Width="60"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Bind Name}"
+                                   FontSize="14"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
                 </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+            </ListView.ItemTemplate>
+        </ListView>
 
-        <!-- VOD Items -->
-        <GridView Grid.Row="1" Grid.Column="1"
+        <!-- VOD Items - Simple List -->
+        <ListView Grid.Row="1" Grid.Column="1"
                   x:Name="VODGrid"
                   ItemsSource="{x:Bind LocalViewModel.VodItems, Mode=OneWay}"
                   ItemClick="VodItem_Click"
-                  IsItemClickEnabled="True">
-            <GridView.ItemTemplate>
+                  IsItemClickEnabled="True"
+                  SelectionMode="None">
+            <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:VodItem">
-                    <Grid Width="200" Height="300" Margin="5">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <Border Grid.Row="0" Background="{ThemeResource SystemControlBackgroundAccentBrush}" CornerRadius="5">
-                            <Image Source="{x:Bind Screenshot}" Stretch="UniformToFill" />
-                        </Border>
-
-                        <StackPanel Grid.Row="1" Margin="5,5,0,0">
-                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Text="{x:Bind Year}" Opacity="0.7" FontSize="12"/>
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBlock Text="★" FontSize="12" Foreground="Gold"/>
-                                <TextBlock Text="{x:Bind Rating}" FontSize="12" Opacity="0.7"/>
-                            </StackPanel>
+                    <StackPanel Padding="10,8">
+                        <TextBlock Text="{x:Bind Name}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                            <TextBlock Text="{x:Bind Year}" FontSize="12" Opacity="0.7"/>
+                            <TextBlock Text="{x:Bind Rating}" FontSize="12" Opacity="0.7"/>
                         </StackPanel>
-                    </Grid>
+                    </StackPanel>
                 </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+            </ListView.ItemTemplate>
+        </ListView>
 
         <ProgressRing Grid.Row="1" Grid.Column="1"
                       IsActive="{x:Bind LocalViewModel.IsLoading, Mode=OneWay}"
